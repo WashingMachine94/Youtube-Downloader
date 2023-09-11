@@ -1,6 +1,8 @@
 # Youtube-Downloader
 A free software to download Youtube and Reddit videos. Ensures highest video and audio quality.
 
+Download link: [here](https://github.com/WashingMachine94/Youtube-Downloader/releases/tag/v0.1.1).
+
 ![image](https://user-images.githubusercontent.com/77636779/210569984-a03f5f22-51c3-43b2-a8cc-0616c6d7e35a.png)
 
 Would you like an easy way to download all your Youtube and reddit video's without paying
