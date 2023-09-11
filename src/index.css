@@ -1,0 +1,126 @@
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica,
+    Arial, sans-serif;
+  /* max-width: 38rem; */
+
+  height: 100%;
+  width: 100%;
+  margin: 0px;
+  padding: 0px;
+
+  background-color: rgb(51, 51, 51);
+
+  color: rgb(221, 221, 221);
+}
+.titlebar {
+  width: 100%;
+  height: 30px;
+  position: fixed;
+  top: 0px;
+  left: 0px;
+}
+.closeWindow {
+  width: 40px;
+  height: 100%;
+  right: 0px;
+  position: absolute;
+  text-align: center;
+  justify-content: center;
+  font-size: x-large;
+  line-height: 28px;
+}
+.closeWindow::after {
+  content: "\00d7";
+}
+.closeWindow:hover {
+  background-color: red;
+}
+.minimizeWindow {
+  width: 40px;
+  height: 100%;
+  right: 40px;
+  position: absolute;
+  text-align: center;
+  justify-content: center;
+  font-size: x-large;
+  line-height: 28px;
+}
+.minimizeWindow::after {
+  content: "\2212";
+}
+.minimizeWindow:hover {
+  background-color: rgba(255,255,255,0.2);
+}
+.main {
+  top: 30px;
+  position: absolute;
+  height: auto;
+  width: 100%;
+}
+.main-left {
+  height: auto;
+  flex-grow: 3;
+}
+.main-right {
+  flex-grow: 1;
+  padding: 10px;
+}
+
+.form-control {
+  border-radius: 0px 5px 5px 0px;
+  border-style: none;
+  height: 30px;
+  background-color: rgb(69, 69, 69);
+  color: rgb(221, 221, 221) ;
+  padding-left: 10px;
+}
+.input-group {
+  background-color: rgb(89, 89, 89); 
+  border-radius: 5px;
+  margin: 10px;
+  box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+  display: flex;
+  flex-direction: row;
+}
+.input-group-addon {
+  text-align:center;
+  margin: 5px;
+  margin-top: 4px;
+  margin-left: 7px; 
+}
+.form-control {
+  flex-grow: 1;
+}
+.downloadbutton {
+  background-color: rgb(69, 69, 69); 
+  width: 100%;
+  height: 100%;
+  box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+}
+.downloadbutton:hover {
+  background-color: rgb(76, 76, 76); 
+}
+  
+.drag {
+  -webkit-app-region: drag;
+}
+.nodrag {
+  -webkit-app-region: no-drag;
+}
+input, select {
+  outline: none;
+}
+select:hover {
+  background-color: rgb(76, 76, 76); 
+  cursor: pointer;
+}
+.file-upload:hover {
+  background-color: rgb(76, 76, 76); 
+  cursor: pointer;
+}

@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Youtube Downloader</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="index.css" />
+ </head>
+<body>
+  <div class="titlebar drag">
+    <span class="closeWindow nodrag" id="CloseButton" type="text"></span>
+    <span class="minimizeWindow nodrag" id="MinimizeButton" type="text"></span>
+  </div>
+
+  <div class="main" style="display: flex;">
+    <div class="main-left">
+
+      <div class="input-group margin-bottom-sm">
+        <span class="input-group-addon"><i class="fa fa-youtube-play fa-fw" aria-hidden="true"></i></span>
+        <input class="form-control" id="url" type="text" placeholder="Youtube link...">
+      </div>
+
+      <div class="flex-container" style="display: flex; flex-direction: row;">
+        <div class="input-group margin-bottom-sm" style=" height: 32px; flex-grow: 6;">
+          <span class="input-group-addon"><i class="fa fa-folder fa-fw" aria-hidden="true"></i></span>
+          <label class="form-control upload file-upload" style="height:32px; flex-grow:1; text-align: center; line-height: 27px;" placeholder="Click to select download folder...">
+  
+            <input class="form-control upload" type="file" id="upload" style="height:0px; width: 0px; overflow: hidden; "webkitdirectory directory>
+              <span id="filepath-text" style="color: #6a6a6a; font-size: small; margin-right: 10px;">Select download folder...</span>
+            </input>
+          </label>
+        </div>
+        <div class="input-group margin-bottom-sm" style="flex-grow: 1;">
+          <span class="input-group-addon" style="margin-top: 5px;"><i class="fa fa-desktop fa-fw" id="FiletypeIcon" aria-hidden="true"></i></span>
+          <select class="form-control" id="filetype" type="file" style="height:32px;"; placeholder="Select download folder..." webkitdirectory directory> 
+            <option value="mp4">.mp4</option>
+            <option value="mp3">.mp3</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="main-right">
+      <div class="downloadbutton" id="DownloadButton">
+        <i class="fa fa-download fa-fw fa-2x" id="DownloadIcon" style="top: 50%" aria-hidden="true"></i>
+      </div>
+    </div>
+  </div>
+  
+</body>
+<script>
+  const fs = require('fs');
+  const http = require('https');
+  const nconf = require('nconf');
+  const ytdl = require('ytdl-core');
+  const electron = require('electron');
+  const ffmpeg = require('fluent-ffmpeg');
+  const ffmpegInstaller = require('ffmpeg-static');
+  const ipcRenderer = electron.ipcRenderer;
+  
+  ffmpeg.setFfmpegPath(ffmpegInstaller);
+  console.log(ffmpegInstaller)
+  
+  // load config data
+  nconf.use('file', {file: './config.json'});
+  nconf.load();
+
+  if(nconf.get("path")) { document.getElementById("filepath-text").innerText = nconf.get("path"); }
+  if(nconf.get("filetype")) { document.getElementById("filetype").value = nconf.get("filetype"); }
+  if(nconf.get("filetype") == "mp3") {
+      document.getElementById("FiletypeIcon").classList.replace("fa-desktop", "fa-music");
+  }
+
+  // save path onChange
+  document.getElementById("upload").addEventListener("change", function () {
+    var path = document.getElementById("upload").files[0].path;
+
+    path = path.substring(0, path.lastIndexOf("\\"));
+    document.getElementById("filepath-text").innerText = path;
+
+    nconf.set('path', path);
+    SaveData();
+  });
+
+  // change filetype on change
+  document.getElementById("filetype").addEventListener("change", function () {
+    var filetype = document.getElementById("filetype").value;
+
+    // also change the icon
+    if(filetype == "mp4") {
+      document.getElementById("FiletypeIcon").classList.replace("fa-music", "fa-desktop");
+    }
+    if(filetype == "mp3") {
+      document.getElementById("FiletypeIcon").classList.replace("fa-desktop", "fa-music");
+    }
+    nconf.set('filetype', filetype);
+    SaveData();
+  });
+
+  // titlebar buttons onclick
+  document.getElementById("CloseButton").addEventListener("click", function () {
+    ipcRenderer.send('app/close');
+  });
+  document.getElementById("MinimizeButton").addEventListener("click", function () {
+    ipcRenderer.send('app/minimize');
+  });
+
+  document.getElementById("url").addEventListener("keypress", function(event) {
+  if (event.key === "Enter") {
+    // Cancel the default action, if needed
+    event.preventDefault();
+    document.getElementById("DownloadButton").click();
+  }
+});
+  
+  // Downloadbutton onclick
+  document.getElementById("DownloadButton").addEventListener("click", async function () {
+    var path = document.getElementById("filepath-text").innerText;
+    var url = document.getElementById("url").value;
+    
+    // change download icon to load
+    document.getElementById("DownloadIcon").classList.replace("fa-download", "fa-spinner");
+    document.getElementById("DownloadIcon").classList.add("fa-pulse");
+
+    if(url.includes("reddit.com/")) {
+      if(url[url.length -1] == "/") { url = url.substr(0,url.length-1) }
+      if(document.getElementById("filetype").value == "mp4") {
+        DownloadRedditVideo(path, url);
+      }
+      if(document.getElementById("filetype").value == "mp3") {
+        DownloadRedditAudio(path, url);
+      }
+      return;
+    }
+
+    try {
+      // get info about song
+      var info = await ytdl.getInfo(url);
+      var title = info.videoDetails.title;
+
+      invalidCharacters = ['\\', '/', ':', '*', '?', '"', '<', '>', '|']
+      validCharacters = ['\u29F5','\u2215','\ua789','\u204e','\uff1f','\u201c','\uff1c','\uff1e','\u23d0']
+      for(var i=0; i<invalidCharacters.length; i++) {
+        title = title.replace(invalidCharacters[i], validCharacters[i]);
+      }
+      
+      // download mp4
+      if(document.getElementById("filetype").value == "mp4") {
+        DownloadVideo(path, url, title);
+      }
+      // download mp3
+      if(document.getElementById("filetype").value == "mp3") {
+        DownloadAudio(path, url, title);
+      }
+    } catch (err) {
+      console.log(err)
+      document.getElementById("DownloadIcon").classList.replace("fa-spinner", "fa-download");
+      document.getElementById("DownloadIcon").classList.remove("fa-pulse");
+    }
+  });
+  
+  // saves the config
+  function SaveData() {
+    nconf.save(function (err) {
+      if (err) {
+        console.error(err.message);
+        return;
+      }
+      console.log('Configuration saved successfully.');
+    });
+  }
+  
+  // downloads both mp3 and mp4 file of highest quality and then combines them into 1
+  async function DownloadVideo(path, url, title) {
+    var downloadedVideo = false;
+    var downloadedAudio = false;
+
+    try {
+      await new Promise((resolve) => { // wait
+        ytdl(url, { quality: 'highestvideo'})
+        .pipe(fs.createWriteStream(path + "\\" + title + ".mp4.mp4"))
+        .on('close', () => {
+          // make sure both are already downloaded before merging
+          downloadedVideo = true;
+          if(downloadedAudio) {
+            merge(path + "\\" + title + ".mp4", path + "\\" + title + ".mp3");
+          }
+        })
+        ytdl(url, { filter:'audioonly', quality: 'highestaudio'})
+        .pipe(fs.createWriteStream(path + "\\" + title + ".mp3"))
+        .on('close', () => {
+          // make sure both are already downloaded before merging
+          downloadedAudio = true;
+          if(downloadedVideo) {
+            merge(path + "\\" + title + ".mp4.mp4", path + "\\" + title + ".mp3");
+          }
+        })
+      });
+    } catch (err) {
+      console.log(err);
+      DownloadVideo();
+    }
+  }
+
+  // downloads highest quality audio
+  async function DownloadAudio(path, url, title) {
+    await new Promise((resolve) => { // wait
+        ytdl(url, { filter:'audioonly', quality: 'highestaudio'})
+        .pipe(fs.createWriteStream(path + "\\" + title + ".mp3"))
+        .on('close', () => {
+          document.getElementById("DownloadIcon").classList.replace("fa-spinner", "fa-download");
+          document.getElementById("DownloadIcon").classList.remove("fa-pulse");
+          document.getElementById("url").value = "";
+        })
+      });
+  }
+
+  async function DownloadRedditVideo(path, url) {
+    try {
+      var data = await fetch(url + ".json");
+      data = await data.json();
+
+      var videoLink = data[0]["data"]["children"][0]["data"]["secure_media"]["reddit_video"]["fallback_url"] // direct link to mp4 file without audio 
+      var audioLink = videoLink.split("DASH_")[0] + "DASH_audio.mp4" + videoLink.split(".mp4")[1]; // reshape the link to be for audio
+      var title = data[0]["data"]["children"][0]["data"]["title"];
+
+      invalidCharacters = ['\\', '/', ':', '*', '?', '"', '<', '>', '|']
+      validCharacters = ['\u29F5','\u2215','\ua789','\u204e','\uff1f','\u201c','\uff1c','\uff1e','\u23d0']
+      for(var i=0; i<invalidCharacters.length; i++) {
+        title = title.replace(invalidCharacters[i], validCharacters[i]);
+      }
+
+      var videoDownloaded = false;
+      var audioDownloaded = false;
+      console.log(videoLink, audioLink, title);
+      var video = fs.createWriteStream(path + "\\" + title + ".mp4.mp4");
+      const videoRequest = http.get(videoLink, function(response) {
+        response.pipe(video);
+
+        video.on("finish", () => {
+          video.close();
+          videoDownloaded = true;
+          if(audioDownloaded) {
+            merge(path + "\\" + title + ".mp4", path + "\\" + title + ".mp3");
+          }
+        });
+      });
+      var audio = fs.createWriteStream(path + "\\" + title + ".mp3");
+      const audioRequest = http.get(audioLink, function(response) {
+        response.pipe(audio);
+
+        audio.on("finish", () => {
+          audio.close();
+          audioDownloaded = true;
+          if(videoDownloaded) {
+            merge(path + "\\" + title + ".mp4", path + "\\" + title + ".mp3");
+          }
+        });
+      });
+    } catch {
+      console.log(err)
+      document.getElementById("DownloadIcon").classList.replace("fa-spinner", "fa-download");
+      document.getElementById("DownloadIcon").classList.remove("fa-pulse");
+    }
+  }
+  async function DownloadRedditAudio(path, url) {
+    try {
+      var data = await fetch(url + ".json");
+      data = await data.json();
+
+      var videoLink = data[0]["data"]["children"][0]["data"]["secure_media"]["reddit_video"]["fallback_url"] // direct link to mp4 file without audio 
+      var audioLink = videoLink.split("DASH_")[0] + "DASH_audio.mp4" + videoLink.split(".mp4")[1]; // reshape the link to be for audio
+      var title = data[0]["data"]["children"][0]["data"]["title"];
+
+      invalidCharacters = ['\\', '/', ':', '*', '?', '"', '<', '>', '|']
+      validCharacters = ['\u29F5','\u2215','\ua789','\u204e','\uff1f','\u201c','\uff1c','\uff1e','\u23d0']
+      for(var i=0; i<invalidCharacters.length; i++) {
+        title = title.replace(invalidCharacters[i], validCharacters[i]);
+      }
+
+      var audio = fs.createWriteStream(path + "\\" + title + ".mp3");
+      const audioRequest = http.get(audioLink, function(response) {
+        response.pipe(audio);
+
+        audio.on("finish", () => {
+          audio.close();
+          document.getElementById("DownloadIcon").classList.replace("fa-spinner", "fa-download");
+          document.getElementById("DownloadIcon").classList.remove("fa-pulse");
+          document.getElementById("url").value = "";
+        });
+      });
+
+    } catch {
+      console.log(err)
+      document.getElementById("DownloadIcon").classList.replace("fa-spinner", "fa-download");
+      document.getElementById("DownloadIcon").classList.remove("fa-pulse");
+    }
+  }
+  // merges sound and video files.
+  function merge(video, audio) {
+    ffmpeg()
+        .addInput(video + ".mp4")
+        .addInput(audio)
+        .addOptions(['-map 0:v', '-map 1:a', '-c:v copy'])
+        .format('mp4')
+        .on('error', (error) => console.log(error))
+        .on('end', () => {
+          document.getElementById("DownloadIcon").classList.replace("fa-spinner", "fa-download");
+          document.getElementById("DownloadIcon").classList.remove("fa-pulse");
+          console.log(' finished !');
+          fs.unlinkSync(video + ".mp4");
+          fs.unlinkSync(audio);
+          document.getElementById("url").value = "";
+        })
+        .saveToFile(video)
+  }
+
+</script>
+</html>

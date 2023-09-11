@@ -1,0 +1,52 @@
+{
+  "name": "youtube-downloader",
+  "productName": "Youtube Downloader",
+  "version": "0.1.1",
+  "description": "My Electron application description",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "electron-forge start",
+    "package": "electron-forge package",
+    "make": "electron-forge make",
+    "publish": "electron-forge publish",
+    "lint": "echo \"No linting configured\"",
+    "build-electron": "electron-builder"
+  },
+  "build": {
+    "asar": false,
+    "appId": "youtube-downloader",
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "C:\\tmp\\Youtube-Downloader\\src\\Images\\YoutubeDownloader.ico"
+    },
+    "nsis": {
+      "installerIcon": "C:\\tmp\\Youtube-Downloader\\src\\Images\\YoutubeDownloader.ico",
+      "uninstallerIcon": "C:\\tmp\\Youtube-Downloader\\src\\Images\\YoutubeDownloader.ico",
+      "uninstallDisplayName": "Youtube Downloader"
+    }
+  },
+  "keywords": [],
+  "author": {
+    "name": "WashingMachine94",
+    "email": "WasmachineBBQ@gmail.com"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "child-process": "^1.0.2",
+    "electron-squirrel-startup": "^1.0.0",
+    "ffmpeg-static": "^5.1.0",
+    "fluent-ffmpeg": "^2.1.2",
+    "nconf": "^0.12.0",
+    "ytdl-core": "^4.11.5"
+  },
+  "devDependencies": {
+    "@electron-forge/cli": "^6.0.4",
+    "@electron-forge/maker-deb": "^6.0.4",
+    "@electron-forge/maker-rpm": "^6.0.4",
+    "@electron-forge/maker-squirrel": "^6.0.4",
+    "@electron-forge/maker-zip": "^6.0.4",
+    "electron": "22.0.0"
+  }
+}
