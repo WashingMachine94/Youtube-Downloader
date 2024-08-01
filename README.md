@@ -1,5 +1,5 @@
 > [!CAUTION]
-> This project has been discontinued and no longer works. I've removed the release 
+> This project has been discontinued and no longer works.
 > You can however clone the repository and build it yourself using electron-builder.
 
 # Youtube-Downloader
