@@ -1,3 +1,7 @@
+> [!CAUTION]
+> This project has been discontinued and no longer works. I've removed the release 
+> You can however clone the repository and build it yourself using electron-builder.
+
 # Youtube-Downloader
 A free software to download Youtube and Reddit videos. Ensures highest video and audio quality.
 
